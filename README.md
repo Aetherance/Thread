@@ -65,6 +65,8 @@
 
 # 多线程使用笔记
 
+## create
+
 在多线程的使用中，可能会出现主线程先结束使其他线程也终止的情况
 
 ```cpp
@@ -124,3 +126,42 @@ int main()
     pthread_exit(0);
 }
 ```
+
+## join和detach
+
+```cpp
+void pthread_test()
+{
+    cout<<"test()调用"<<endl;
+}
+int main()
+{
+    pthread_t ptd;
+    pthread_create(&ptd,NULL,(void*(*)(void*))pthread_test,NULL);
+    pthread_detach(ptd);
+    pthread_join(ptd,NULL);
+
+    // pthread_exit(0);
+}
+```
+
+一个已经detach的线程是无法join的
+
+```cpp
+#include<iostream>
+#include<pthread.h>
+using namespace std;
+void pthread_test()
+{
+    cout<<"test()调用"<<endl;
+}
+int main()
+{
+    pthread_t ptd;
+    pthread_create(&ptd,NULL,(void*(*)(void*))pthread_test,NULL);
+    pthread_detach(ptd);
+    pthread_join(ptd,NULL);
+
+    // pthread_exit(0);
+}
+```c
