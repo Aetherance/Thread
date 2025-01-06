@@ -1,3 +1,4 @@
+# 线程学习笔记
 # 为什么要使用线程
 1. 线程之间共享全局区和堆内存，这使线程之间的信息共享较进程之间更为方便，代价更小。
 2. 创建进程时使用的系统调用`fork()`代价高，创建线程使用的系统调用`clone()`比`fork()`通常快10倍不止。
@@ -61,3 +62,65 @@
 
 # 线程属性
 利用`pthread_create()`的第二个参数可以设置线程的属性。
+
+# 多线程使用笔记
+
+在多线程的使用中，可能会出现主线程先结束使其他线程也终止的情况
+
+```cpp
+void* thread_func(void *)
+{
+    cout<<"func()调用  线程ID -> "<<pthread_self()<<endl;
+    return NULL;
+}
+int main()
+{
+    thread_func(NULL);
+    pthread_t ptd;
+    pthread_create(&ptd,NULL,thread_func,NULL);
+
+    return 0;
+}
+```
+
+只输出了主线程的调用
+
+需要让主线程'等待'其他线程结束。 可以使用 `pthread_join()`或让主线程sleep 使用while()等待也是可行的 
+
+```cpp
+void* thread_func(void *)
+{
+    cout<<"func()调用  线程ID -> "<<pthread_self()<<endl;
+    return NULL;
+}
+int main()
+{
+    thread_func(NULL);
+    pthread_t ptd;
+    pthread_create(&ptd,NULL,thread_func,NULL);
+    
+    pthread_join(ptd,NULL);
+    //sleep(3);
+    //while(1);
+
+    return 0;
+}
+```
+
+也可以调用`pthread_exit`让主线程退出，其他线程会继续运行。
+
+```cpp
+void* thread_func(void *)
+{
+    cout<<"func()调用  线程ID -> "<<pthread_self()<<endl;
+    return NULL;
+}
+int main()
+{
+    thread_func(NULL);
+    pthread_t ptd;
+    pthread_create(&ptd,NULL,thread_func,NULL);   
+    
+    pthread_exit(0);
+}
+```
