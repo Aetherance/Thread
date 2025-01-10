@@ -11,7 +11,7 @@ int main()
 {
     thread_func(NULL);
     pthread_t ptd;
-    pthread_create(&ptd,NULL,thread_func,NULL);   
+    pthread_create(&ptd,NULL,thread_func,NULL);
     pthread_exit(0);
 
     return 0;
