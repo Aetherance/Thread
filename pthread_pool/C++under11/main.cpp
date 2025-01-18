@@ -1,15 +1,30 @@
+#include<iostream>
 #include"threadpool.h"
+using namespace std;
 
 int main()
 {
-    threadpool pool(4);
+    threadpool pool(0);
 
-    function TaskA = [](){
-        cout<<"Task A .."<<endl;
-    };
+    pool.TaskSubmit([](){
+        cout<<"TASK A"<<endl;
+    });
 
-    pool.TaskSubmit(TaskA);
-    
-    pool.Shutdown();
+    pool.TaskSubmit([](){
+        cout<<"TASK B"<<endl;
+    });
+
+    pool.TaskSubmit([](){
+        cout<<"TASK C"<<endl;
+    });
+
+    pool.TaskSubmit([](){
+        cout<<"TASK D"<<endl;
+    });
+
+    pool.TaskSubmit([](){
+        cout<<"TASK E"<<endl;
+    });
+
     return 0;
 }

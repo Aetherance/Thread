@@ -16,17 +16,17 @@ public:
     threadpool(int);
     ~threadpool();
     static void * Woker(void *);
-    void Shutdown(void);
+    void Stop(void);
     void TaskSubmit(function<void()>);
 private:
     bool isStop;
+    size_t ThreadsActive;
     vector<pthread_t>Threads;
-    queue<function<void()>>TaskQueue;
     pthread_mutex_t PoolMutex;
-    pthread_cond_t PoolCond;
-    bool isShutdown;
-    pthread_cond_t ShutdownCond;
-    size_t ThreadsWorking;
+    queue<function<void()>>TaskQueue;
+    pthread_cond_t TaskCond;
+    pthread_mutex_t TaskMutex;
+    pthread_cond_t ShutCond;
 };
 
 

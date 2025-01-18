@@ -1,77 +1,61 @@
 #include"threadpool.h"
 
-threadpool::threadpool(int Size)
-{
-    pthread_t ThreadCreated;
+threadpool::threadpool(int Size) {
+    pthread_t thread;
     for(int i = 0;i<Size;i++)
     {
-        pthread_create(&ThreadCreated,NULL,Woker,this);
-        Threads.push_back(ThreadCreated);
+        pthread_create(&thread,nullptr,Woker,this);
+        Threads.push_back(thread);
     }
-    pthread_cond_init(&PoolCond,NULL);
+    isStop = false;
     pthread_mutex_init(&PoolMutex,NULL);
-    isShutdown = false;
-    ThreadsWorking = 0;
+    pthread_cond_init(&TaskCond,NULL);
+    pthread_mutex_init(&TaskMutex,NULL);
+    pthread_cond_init(&ShutCond,NULL);
+    ThreadsActive = 0;
 }
 
-threadpool::~threadpool()
-{
-
-}
-
-void *threadpool::Woker(void * This)
-{
-    threadpool * thispool = static_cast<threadpool*>(This);
-    pthread_mutex_lock(&(thispool->PoolMutex));
-    while (!thispool->isShutdown)
-    {
-        while (thispool->TaskQueue.empty()&&!thispool->isShutdown)
-        {
-            pthread_cond_wait(&thispool->PoolCond,&thispool->PoolMutex);
-        }
-        if(thispool->isShutdown)
-        {
-            pthread_mutex_unlock(&thispool->PoolMutex);
-            return NULL;
-        }
-        function<void()>Task = thispool->TaskQueue.front();
-        thispool->TaskQueue.pop();
-        thispool->ThreadsWorking ++;
-        pthread_mutex_unlock(&thispool->PoolMutex);
-        Task();
-        pthread_mutex_lock(&thispool->PoolMutex);
-        thispool->ThreadsWorking --;
-        if(thispool->ThreadsWorking == 0&&thispool->isShutdown)
-        {
-            pthread_cond_signal(&thispool->ShutdownCond);
-        }
-    }
-    pthread_mutex_unlock(&thispool->PoolMutex);
-
-    return NULL;
-}
-
-void threadpool::TaskSubmit(function<void()>Task)
-{
-    TaskQueue.push(Task);
-    pthread_cond_signal(&PoolCond);
-}
-
-void threadpool::Shutdown()
-{
+threadpool::~threadpool() {
     pthread_mutex_lock(&PoolMutex);
-    while(ThreadsWorking)
-    {
-        pthread_cond_wait(&ShutdownCond,&PoolMutex);
+    while (ThreadsActive||!TaskQueue.empty()) {
+        pthread_cond_wait(&ShutCond,&PoolMutex);
     }
+    isStop = true;
     pthread_mutex_unlock(&PoolMutex);
-    
-    isShutdown = true;
-    pthread_cond_broadcast(&PoolCond);
-    for(auto thread:Threads)
-    {
+    pthread_cond_broadcast(&TaskCond);
+    for(pthread_t thread : Threads) {
         pthread_join(thread,NULL);
     }
-    pthread_cond_destroy(&PoolCond);
-    pthread_mutex_destroy(&PoolMutex);
+}
+
+void * threadpool::Woker(void * This) {
+    threadpool * thispool = static_cast<threadpool*>(This);
+    while (!thispool->isStop)
+    {
+        pthread_mutex_lock(&thispool->PoolMutex);
+        while (thispool->TaskQueue.empty()&&!thispool->isStop) {
+            pthread_cond_wait(&thispool->TaskCond,&thispool->PoolMutex);
+        }
+        if(thispool->isStop) {
+            pthread_mutex_unlock(&thispool->PoolMutex);
+            return nullptr;
+        }
+        thispool->ThreadsActive ++;
+        function<void()> Task = thispool->TaskQueue.front();
+        thispool->TaskQueue.pop();
+        Task();
+        thispool->ThreadsActive --;
+        if(thispool->ThreadsActive == 0&&thispool->TaskQueue.empty()) {
+            pthread_cond_broadcast(&thispool->ShutCond);
+        }
+        pthread_mutex_unlock(&thispool->PoolMutex);
+    }
+    return nullptr;
+}
+
+void threadpool::TaskSubmit(function<void()>Task) {
+    pthread_mutex_lock(&TaskMutex);
+    TaskQueue.push(Task);
+    pthread_cond_signal(&TaskCond);
+    pthread_mutex_unlock(&TaskMutex);
 }
