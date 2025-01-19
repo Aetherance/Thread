@@ -12,6 +12,7 @@ threadpool::threadpool(int Size) {
     pthread_cond_init(&TaskCond,NULL);
     pthread_mutex_init(&TaskMutex,NULL);
     pthread_cond_init(&ShutCond,NULL);
+    pthread_mutex_init(&ShutMutex,NULL);
     ThreadsActive = 0;
 }
 
@@ -26,6 +27,11 @@ threadpool::~threadpool() {
     for(pthread_t thread : Threads) {
         pthread_join(thread,NULL);
     }
+    pthread_mutex_destroy(&PoolMutex);
+    pthread_cond_destroy(&TaskCond);
+    pthread_mutex_destroy(&TaskMutex);
+    pthread_cond_destroy(&ShutCond);
+    pthread_mutex_destroy(&ShutMutex);
 }
 
 void * threadpool::Woker(void * This) {
@@ -61,19 +67,12 @@ void threadpool::TaskSubmit(function<void()>Task) {
 }
 
 void threadpool::Stop() {
-    if(!ThreadsActive&&TaskQueue.empty()) {
-        isStop = true;
-        pthread_cond_broadcast(&TaskCond);
-        for(pthread_t thread : Threads) {
-            pthread_join(thread,NULL);
-        }        
-    }
-    pthread_mutex_lock(&PoolMutex);
+    pthread_mutex_lock(&ShutMutex);
     while (ThreadsActive||!TaskQueue.empty()) {
-        pthread_cond_wait(&ShutCond,&PoolMutex);
+        pthread_cond_wait(&ShutCond,&ShutMutex);
     }
     isStop = true;
-    pthread_mutex_unlock(&PoolMutex);
+    pthread_mutex_unlock(&ShutMutex);
     pthread_cond_broadcast(&TaskCond);
     for(pthread_t thread : Threads) {
         pthread_join(thread,NULL);

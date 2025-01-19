@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-    threadpool pool(0);
+    threadpool pool(4);
 
     pool.TaskSubmit([](){
         cout<<"TASK A"<<endl;
@@ -25,6 +25,8 @@ int main()
     pool.TaskSubmit([](){
         cout<<"TASK E"<<endl;
     });
+
+    pool.Stop();
 
     return 0;
 }
