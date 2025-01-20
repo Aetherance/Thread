@@ -61,13 +61,6 @@ void threadpool::TaskSubmit(function<void()>Task) {
 }
 
 void threadpool::Stop() {
-    if(!ThreadsActive&&TaskQueue.empty()) {
-        isStop = true;
-        pthread_cond_broadcast(&TaskCond);
-        for(pthread_t thread : Threads) {
-            pthread_join(thread,NULL);
-        }        
-    }
     pthread_mutex_lock(&PoolMutex);
     while (ThreadsActive||!TaskQueue.empty()) {
         pthread_cond_wait(&ShutCond,&PoolMutex);
