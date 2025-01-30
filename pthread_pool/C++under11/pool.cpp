@@ -12,20 +12,21 @@ threadpool::threadpool(int Size) {
     pthread_cond_init(&TaskCond,NULL);
     pthread_mutex_init(&TaskMutex,NULL);
     pthread_cond_init(&ShutCond,NULL);
+    pthread_mutex_init(&ShutMutex,NULL);
     ThreadsActive = 0;
 }
 
 threadpool::~threadpool() {
-    pthread_mutex_lock(&PoolMutex);
-    while (ThreadsActive||!TaskQueue.empty()) {
-        pthread_cond_wait(&ShutCond,&PoolMutex);
-    }
-    isStop = true;
-    pthread_mutex_unlock(&PoolMutex);
-    pthread_cond_broadcast(&TaskCond);
-    for(pthread_t thread : Threads) {
-        pthread_join(thread,NULL);
-    }
+    // pthread_mutex_lock(&ShutMutex);
+    // while (ThreadsActive||!TaskQueue.empty()) {
+    //     pthread_cond_wait(&ShutCond,&ShutMutex);
+    // }
+    // isStop = true;
+    // pthread_mutex_unlock(&ShutMutex);
+    // pthread_cond_broadcast(&TaskCond);
+    // for(pthread_t thread : Threads) {
+    //     pthread_join(thread,NULL);
+    // }
 }
 
 void * threadpool::Woker(void * This) {
@@ -37,13 +38,16 @@ void * threadpool::Woker(void * This) {
             pthread_cond_wait(&thispool->TaskCond,&thispool->PoolMutex);
         }
         if(thispool->isStop) {
+            cout<<"here"<<endl;
             pthread_mutex_unlock(&thispool->PoolMutex);
             return nullptr;
         }
         thispool->ThreadsActive ++;
         function<void()> Task = thispool->TaskQueue.front();
         thispool->TaskQueue.pop();
+        pthread_mutex_unlock(&thispool->PoolMutex);
         Task();
+        pthread_mutex_lock(&thispool->PoolMutex);
         thispool->ThreadsActive --;
         if(thispool->ThreadsActive == 0&&thispool->TaskQueue.empty()) {
             pthread_cond_broadcast(&thispool->ShutCond);
@@ -61,13 +65,19 @@ void threadpool::TaskSubmit(function<void()>Task) {
 }
 
 void threadpool::Stop() {
-    pthread_mutex_lock(&PoolMutex);
+    pthread_mutex_lock(&ShutMutex);
     while (ThreadsActive||!TaskQueue.empty()) {
-        pthread_cond_wait(&ShutCond,&PoolMutex);
+        pthread_cond_wait(&ShutCond,&ShutMutex);
     }
     isStop = true;
-    pthread_mutex_unlock(&PoolMutex);
-    pthread_cond_broadcast(&TaskCond);
+    pthread_mutex_unlock(&ShutMutex);
+    sleep(1);
+    cout<<"1"<<endl;
+    for(int i = 0;i++;i<100) {
+        pthread_cond_broadcast(&TaskCond);
+    }
+    sleep(3);
+    cout<<"there"<<endl;
     for(pthread_t thread : Threads) {
         pthread_join(thread,NULL);
     }

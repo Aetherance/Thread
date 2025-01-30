@@ -4,29 +4,17 @@ using namespace std;
 
 int main()
 {
-    threadpool pool(60);
+    threadpool pool(20);
 
-    pool.TaskSubmit([](){
-        cout<<"TASK A"<<endl;
-    });
+    for(int i = 0;i < 26 ; i++) {
+        pool.TaskSubmit([i](){
+            cout<<"TASK "<<(char)('A'+i)<<endl;
+        });
+    }
 
-    pool.TaskSubmit([](){
-        cout<<"TASK B"<<endl;
-    });
-
-    // pool.TaskSubmit([](){
-    //     cout<<"TASK C"<<endl;
-    // });
-
-    // pool.TaskSubmit([](){
-    //     cout<<"TASK D"<<endl;
-    // });
-
-    // pool.TaskSubmit([](){
-    //     cout<<"TASK E"<<endl;
-    // });
-
+    sleep(1);
     pool.Stop();
+    // sleep(1000);
 
     return 0;
 }

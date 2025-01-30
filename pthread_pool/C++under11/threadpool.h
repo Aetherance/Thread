@@ -27,6 +27,7 @@ private:
     pthread_cond_t TaskCond;
     pthread_mutex_t TaskMutex;
     pthread_cond_t ShutCond;
+    pthread_mutex_t ShutMutex;
 };
 
 #endif
