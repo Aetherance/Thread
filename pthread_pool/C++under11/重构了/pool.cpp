@@ -69,14 +69,11 @@ void threadpool::Stop() {
     while (ThreadsActive||!TaskQueue.empty()) {
         pthread_cond_wait(&ShutCond,&ShutMutex);
     }
+    pthread_mutex_lock(&PoolMutex);
     isStop = true;
+    pthread_mutex_unlock(&PoolMutex);
     pthread_mutex_unlock(&ShutMutex);
-    sleep(1);
-    cout<<"1"<<endl;
-    for(int i = 0;i++;i<100) {
-        pthread_cond_broadcast(&TaskCond);
-    }
-    sleep(3);
+    pthread_cond_broadcast(&TaskCond);
     cout<<"there"<<endl;
     for(pthread_t thread : Threads) {
         pthread_join(thread,NULL);

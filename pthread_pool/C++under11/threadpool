@@ -1,0 +1,82 @@
+#include<pthread.h>
+#include<iostream>
+#include<vector>
+#include<queue>
+#include<functional>
+#include<unistd.h>
+using namespace std;
+
+class threadpool
+{
+public:
+    threadpool(int);
+    ~threadpool();
+    static void * worker(void *);
+    void submit(function<void()>);
+    void waitAll();
+    void stop();
+private:
+    bool Stop;
+    vector<pthread_t>threads;
+    queue<function<void()>>TaskQueue;
+
+    pthread_mutex_t mutex_wait_for_task;
+    pthread_cond_t task_cond;
+
+    pthread_mutex_t mutex_wait_all;
+    pthread_cond_t cond_wait_all;
+};
+
+threadpool::threadpool(int Size) {
+    pthread_t temp_ptd;
+    for(int i = 0;i<Size;i++) {
+        pthread_create(&temp_ptd,nullptr,worker,this);
+    }
+    Stop = false;
+    pthread_mutex_init(&mutex_wait_for_task,nullptr);
+    pthread_cond_init(&task_cond,nullptr);
+    pthread_mutex_init(&mutex_wait_all,nullptr);
+    pthread_cond_init(&cond_wait_all,nullptr);
+}
+
+void * threadpool::worker(void * this_ptr) {
+    threadpool * pthis = static_cast<threadpool*>(this_ptr);
+    while(!pthis->Stop) {
+        pthread_mutex_lock(&pthis->mutex_wait_for_task);
+        while(pthis->TaskQueue.empty()&&!pthis->Stop) {
+            pthread_cond_wait(&pthis->task_cond,&pthis->mutex_wait_for_task);
+        }
+        if(pthis->Stop) {
+            pthread_mutex_unlock(&pthis->mutex_wait_for_task);
+            return nullptr;
+        }
+        function<void()>task = pthis->TaskQueue.front();
+        pthis->TaskQueue.pop();
+        task();
+        pthread_mutex_unlock(&pthis->mutex_wait_for_task);
+    }   
+
+    return nullptr;
+}
+
+void threadpool::submit(function<void()>task) {
+    TaskQueue.push(task);
+    pthread_cond_signal(&task_cond);
+}
+
+// void threadpool::waitAll() {
+//     pthread_mutex_lock(&mutex_wait_all);
+//     while () {
+        
+//     }
+//     pthread_mutex_unlock(&mutex_wait_all);
+// }
+
+void threadpool::stop() {
+    // Stop = true;
+    pthread_cond_broadcast(&task_cond);
+}
+
+threadpool::~threadpool() {
+    
+}

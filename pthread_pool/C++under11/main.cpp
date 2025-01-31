@@ -1,20 +1,15 @@
-#include<iostream>
-#include"threadpool.h"
-using namespace std;
+#include"threadpool"
 
-int main()
-{
-    threadpool pool(20);
+int main() {
+    threadpool pool(4);
 
-    for(int i = 0;i < 26 ; i++) {
-        pool.TaskSubmit([i](){
-            cout<<"TASK "<<(char)('A'+i)<<endl;
+    for(int i = 0;i<100;i++) {
+        pool.submit([i](){
+            cout<<"Task Test "<< i + 1 <<endl;
         });
     }
 
     sleep(1);
-    pool.Stop();
-    // sleep(1000);
-
+    pool.stop();
     return 0;
 }
