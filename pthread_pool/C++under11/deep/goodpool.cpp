@@ -130,9 +130,10 @@ class PrintTask : public Task {
 public:
     PrintTask(int id) : task_id(id) {}
     virtual void run() {
-        usleep(100000); // 模拟耗时操作
+        // usleep(100000); // 模拟耗时操作
         printf("Task %d executed by thread %lu\n", 
               task_id, (unsigned long)pthread_self());
+        // cout<<"task "<<task_id<<"executed by "<<pthread_self()<<endl;
     }
 private:
     int task_id;

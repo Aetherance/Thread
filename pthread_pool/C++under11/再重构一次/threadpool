@@ -38,7 +38,6 @@ threadpool::threadpool(int Size) {
     for(int i = 0;i<Size;i++) {
         pthread_create(&temp_ptd,nullptr,worker,this);
         threads.push_back(temp_ptd);
-        printf("Thread %ld was created\n",pthread_self());
     }
     Stop = false;
     threadsActive = 0;
@@ -53,7 +52,7 @@ void * threadpool::worker(void * this_ptr) {
         }
 
         if(pthis->Stop&&pthis->TaskQueue.empty()) {
-            printf("Thread %ld exited\n",pthread_self());
+            cout<<"a thread exited"<<endl;
             pthread_mutex_unlock(&pthis->mutex);
             return nullptr;
         }
@@ -64,10 +63,7 @@ void * threadpool::worker(void * this_ptr) {
         task();
         pthread_mutex_lock(&pthis->mutex);
         pthis->threadsActive --;
-
-        if(pthis->TaskQueue.empty()&&!pthis->threadsActive)
-            pthread_cond_broadcast(&pthis->cond_wait_all);
-        
+        if(pthis->TaskQueue.empty()&&!pthis->threadsActive)pthread_cond_broadcast(&pthis->cond_wait_all);
         pthread_mutex_unlock(&pthis->mutex);
     }
     return nullptr;

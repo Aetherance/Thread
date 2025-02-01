@@ -1,15 +1,19 @@
+#include<iostream>
 #include"threadpool"
+#include<unistd.h>
+using namespace std;
 
 int main() {
-    threadpool pool(4);
+    threadpool pool(16);
 
-    for(int i = 0;i<100;i++) {
-        pool.submit([i](){
-            cout<<"Task Test "<< i + 1 <<endl;
+    for(int i = 0;i<200;i++) {
+        pool.submit([i]() {
+            printf("Task %02d is running on thread %ld\n",i,pthread_self());
+            sleep(1);
         });
     }
 
-    sleep(1);
     pool.stop();
+
     return 0;
 }

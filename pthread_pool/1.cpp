@@ -119,12 +119,12 @@ void sampleTask(int id) {
 }
 
 int main() {
-    ThreadPool pool(4);  // 创建一个包含4个线程的线程池
+    ThreadPool pool(100);  // 创建一个包含4个线程的线程池
 
     // 向线程池提交10个任务
-    // for (int i = 0; i < 10; ++i) {
-    //     pool.enqueue([i](){ sampleTask(i); });
-    // }
+    for (int i = 0; i < 1000; ++i) {
+        pool.enqueue([i](){ sampleTask(i); });
+    }
 
     // 主线程等待一段时间让所有任务完成
     std::cout << "Waiting for all tasks to complete..." << std::endl;
