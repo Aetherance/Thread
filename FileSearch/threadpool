@@ -53,7 +53,7 @@ void * threadpool::worker(void * this_ptr) {
         }
 
         if(pthis->Stop&&pthis->TaskQueue.empty()) {
-            printf("Thread %ld exited\n",pthread_self());
+            // printf("Thread %ld exited\n",pthread_self());
             pthread_mutex_unlock(&pthis->mutex);
             return nullptr;
         }

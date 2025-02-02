@@ -12,7 +12,7 @@
 using namespace std;
 using namespace filesystem;
 
-threadpool pool(16);
+threadpool pool(24);
 
 struct SearchConfig {
     std::string root_path;    // 要搜索的根目录
@@ -40,7 +40,7 @@ void search(SearchConfig &config) {
             }
             int size_tail = config.file_type.size();
             if(!entry.is_directory() && filename.find(config.file_type) != string::npos && filename.find(config.file_type) + size_tail == filename.size()) {
-                cout<<YELLOW<<filename<<END<<":  "<<BLUE<<filepath<<endl;
+                cout<<YELLOW<<filename<<END<<":  "<<BLUE<<filepath<<END<<endl;
             }
             if(entry.is_directory()) {
                 dirQueue.push(filepath); 
@@ -58,18 +58,22 @@ void search(SearchConfig &config) {
     config.root_path = dirQueue.front();
     dirQueue.pop();
     recur_count ++;
-    search(config);
+    pool.submit([&config](){
+        search(config);
+    });
     recur_count --;
 }
 
 int main()
 {
     SearchConfig config;
-    config.root_path = "/home/user/CODE";
-    config.file_type = ".c";
+    config.root_path = "/";
+    config.file_type = ".md";
     config.max_depth = 10000000;
     config.skip_hidden = true;
+     
     search(config);
+    pool.stop(); // 一定要记得结束哦
 
     return 0;
 }
