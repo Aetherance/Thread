@@ -20,10 +20,11 @@ cpp_int c(int n)
 void Task(int n) {
     ostringstream oss;
     oss<<c(n);
-    char * result = new char[204800];
-    strcpy(result,oss.str().c_str());
-    printf("%d 的阶乘是 \n %s\n\n",n,result);
-    delete[] result;
+    // char * result = new char[204800];
+    // strcpy(result,oss.str().c_str());
+    // printf("%d 的阶乘是 \n %s\n\n",n,result);
+    // delete[] result;
+    cout<<c(n)<<endl<<endl;
 }
 
 int main()
@@ -32,7 +33,7 @@ int main()
     threadpool pool(24);
 
     
-    for(int i = 1;i<=1000;i++) {
+    for(int i = 1;i<=1000000;i++) {
         pool.submit([i]() {
             Task(i);
         });

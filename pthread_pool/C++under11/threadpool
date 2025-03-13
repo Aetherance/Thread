@@ -1,3 +1,5 @@
+// rubbish threadpool
+
 #include<pthread.h>
 #include<iostream>
 #include<vector>
